@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -22,8 +21,8 @@ model Movie {
 
   actors Actor[] @relation("movie_actors")
 
-  posterId String      @unique @map("poster_id")
-  poster   MoviePoster @relation("movie_poster", fields: [posterId], references: [id])
+  posterId String?      @unique @map("poster_id")
+  poster   MoviePoster? @relation("movie_poster", fields: [posterId], references: [id])
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -46,7 +45,7 @@ model MoviePoster {
 
 model Review {
   id        String   @id @default(uuid())
-  text      String
+  comment   String
   rating    Decimal  @default(0.0)
   movieId   String   @map("movie_id")
   movie     Movie    @relation("movie_reviews", fields: [movieId], references: [id], onDelete: Cascade)
