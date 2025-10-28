@@ -17,10 +17,13 @@ model Movie {
   genre       Genre?  @default(DRAMA)
   isAvailable Boolean @default(false) @map("is_available")
 
+  // Relations one-to-many with Review
   reviews Review[] @relation("movie_reviews")
 
+  // Relations many-to-many with Actor
   actors Actor[] @relation("movie_actors")
 
+  // Relations one-to-one with MoviePoster
   posterId String?      @unique @map("poster_id")
   poster   MoviePoster? @relation("movie_poster", fields: [posterId], references: [id])
 
@@ -34,9 +37,12 @@ model Movie {
 }
 
 model MoviePoster {
-  id        String   @id @default(uuid())
-  url       String
-  movie     Movie?   @relation("movie_poster")
+  id  String @id @default(uuid())
+  url String
+
+  // Relations one-to-one with Movie
+  movie Movie? @relation("movie_poster")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -44,11 +50,14 @@ model MoviePoster {
 }
 
 model Review {
-  id        String   @id @default(uuid())
-  comment   String
-  rating    Decimal  @default(0.0)
-  movieId   String   @map("movie_id")
-  movie     Movie    @relation("movie_reviews", fields: [movieId], references: [id], onDelete: Cascade)
+  id      String @id @default(uuid())
+  comment String
+  rating  Float  @default(0.0)
+
+  // Relations one-to-many with Movie
+  movieId String @map("movie_id")
+  movie   Movie  @relation("movie_reviews", fields: [movieId], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -56,9 +65,12 @@ model Review {
 }
 
 model Actor {
-  id        String   @id @default(uuid())
-  name      String
-  movies    Movie[]  @relation("movie_actors")
+  id   String @id @default(uuid())
+  name String
+
+  // Relations many-to-many with Movie
+  movies Movie[] @relation("movie_actors")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

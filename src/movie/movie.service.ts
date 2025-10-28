@@ -30,8 +30,15 @@ export class MovieService {
             comment: true,
           },
         },
-        poster: true,
+        poster: {
+          select: {
+            id: true,
+            url: true,
+          },
+        },
       },
+      skip: 0,
+      take: 20,
     });
   }
 
@@ -54,7 +61,12 @@ export class MovieService {
             comment: true,
           },
         },
-        poster: true,
+        poster: {
+          select: {
+            id: true,
+            url: true,
+          },
+        },
       },
     });
 
@@ -73,10 +85,10 @@ export class MovieService {
       rating,
       genre,
       isAvailable,
-      url,
+      imageUrl,
       actorsIds,
     } = dto;
-    if (!title || !releaseYear || !isAvailable || !actorsIds) {
+    if (!title || !releaseYear || !actorsIds) {
       throw new NotFoundException('Missing required movie fields');
     }
 
@@ -104,10 +116,10 @@ export class MovieService {
         rating,
         genre,
         isAvailable,
-        poster: url
+        poster: imageUrl
           ? {
               create: {
-                url: url,
+                url: imageUrl,
               },
             }
           : undefined,
@@ -116,46 +128,87 @@ export class MovieService {
         },
       },
       include: {
-        actors: true,
+        actors: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        reviews: {
+          select: {
+            id: true,
+            rating: true,
+            comment: true,
+          },
+        },
+        poster: {
+          select: {
+            id: true,
+            url: true,
+          },
+        },
       },
     });
 
     return movie;
   }
 
-  async update(id: string, dto: UpdateMovieDto): Promise<boolean> {
+  async update(id: string, dto: UpdateMovieDto): Promise<Movie> {
+    const { actorsIds, imageUrl, ...restDto } = dto;
     const movie = await this.findById(id);
 
-    const actors = await this.prismaService.actor.findMany({
-      where: {
-        id: {
-          in: dto.actorsIds,
+    if (actorsIds && actorsIds.length > 0) {
+      const actors = await this.prismaService.actor.findMany({
+        where: {
+          id: {
+            in: actorsIds,
+          },
         },
-      },
-    });
+      });
 
-    if (!actors || actors.length === 0) {
-      throw new NotFoundException(
-        'No valid actors found with the provided IDs',
-      );
+      if (actors.length !== actorsIds.length) {
+        throw new NotFoundException('Some actor IDs are invalid or not found');
+      }
     }
-    await this.prismaService.movie.update({
-      where: { id: movie.id },
+
+    const updatedMovie = await this.prismaService.movie.update({
+      where: {
+        id: movie.id,
+      },
       data: {
-        ...dto,
-        poster: dto.url
-          ? {
-              create: {
-                url: dto.url,
-              },
-            }
-          : undefined,
-        actors: {
-          connect: actors.map((actor) => ({ id: actor.id })),
-        },
+        ...restDto,
+        ...(imageUrl && {
+          poster: {
+            upsert: {
+              create: { url: imageUrl },
+              update: { url: imageUrl },
+            },
+          },
+        }),
+        ...(actorsIds &&
+          actorsIds.length > 0 && {
+            actors: {
+              set: actorsIds.map((id) => ({ id })),
+            },
+          }),
+      },
+    });
+    return updatedMovie;
+  }
+
+  async delete(id: string): Promise<Movie> {
+    const movie = await this.findById(id);
+
+    if (!movie) {
+      throw new NotFoundException('Movie not found');
+    }
+
+    await this.prismaService.movie.delete({
+      where: {
+        id,
       },
     });
 
-    return true;
+    return movie;
   }
 }
