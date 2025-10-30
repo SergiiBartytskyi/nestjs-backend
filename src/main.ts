@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { logger } from './common/middlewares/logger.middleware';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 // import { AuthGuard } from './common/guards/auth.guard';
 
 async function bootstrap() {
@@ -23,6 +24,28 @@ async function bootstrap() {
 
   // Set global prefix
   app.setGlobalPrefix('api');
+
+  // Setup Swagger documentation
+  const config = new DocumentBuilder()
+    .setTitle('API Documentation')
+    .setDescription('The API description')
+    .setVersion('1.0')
+    .setContact(
+      'API Support',
+      'https://github.com/SergiiBartytskyi/nestjs-backend.git',
+      's.bartycjkyj@gmail.com',
+    )
+    .addBearerAuth()
+    .build();
+
+  // Create Swagger document
+  const document = SwaggerModule.createDocument(app, config);
+
+  SwaggerModule.setup('api/docs', app, document, {
+    customSiteTitle: 'API Docs',
+    jsonDocumentUrl: 'api/docs-json',
+    yamlDocumentUrl: 'api/docs-yaml',
+  });
 
   // Use custom logger middleware
   app.use(logger);

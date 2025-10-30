@@ -1,63 +1,33 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { Genre } from '@prisma/client';
-import {
-  IsArray,
-  IsBoolean,
-  IsEnum,
-  IsInt,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-  IsUUID,
-  Max,
-  Min,
-} from 'class-validator';
 
-export class CreateMovieDto {
+export class MovieResponseDto {
   @ApiProperty({
     example: 'Inception',
     description: 'The title of the movie',
     type: 'string',
   })
-  @IsString()
-  @IsNotEmpty()
   title: string;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     example: 'A mind-bending thriller about dream invasion.',
     description: 'The description of the movie',
     type: 'string',
   })
-  @IsString()
-  @IsOptional()
   description: string;
 
   @ApiProperty({
     example: 2010,
     description: 'The release year of the movie',
-    minimum: 1888,
-    maximum: new Date().getFullYear(),
     type: 'integer',
   })
-  @IsInt()
-  @IsNotEmpty()
-  @Min(1888)
-  @Max(new Date().getFullYear())
   releaseYear: number;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     example: 8.8,
     description: 'The rating of the movie',
-    minimum: 0,
-    maximum: 10,
     type: 'number',
-    format: 'float',
   })
-  @IsNumber({ maxDecimalPlaces: 2 })
-  @IsOptional()
-  @Min(0)
-  @Max(10)
   rating: number;
 
   @ApiProperty({
@@ -65,25 +35,20 @@ export class CreateMovieDto {
     description: 'The genre of the movie',
     enum: Genre,
   })
-  @IsEnum(Genre)
   genre: Genre;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     example: true,
     description: 'Indicates if the movie is available for streaming',
     type: 'boolean',
   })
-  @IsBoolean()
-  @IsOptional()
   isAvailable: boolean;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     example: 'https://example.com/image.jpg',
     description: 'The URL of the movie poster image',
     type: 'string',
   })
-  @IsString()
-  @IsOptional()
   imageUrl: string;
 
   @ApiProperty({
@@ -92,7 +57,5 @@ export class CreateMovieDto {
     type: [String],
     items: { type: 'string', format: 'uuid' },
   })
-  @IsArray()
-  @IsUUID('4', { each: true })
   actorsIds: string[];
 }
