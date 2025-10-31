@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
@@ -88,6 +90,7 @@ export class MovieController {
   @ApiUnauthorizedResponse({ description: 'Unauthorized request.' })
   @ApiInternalServerErrorResponse({ description: 'Internal server error.' })
   @Post()
+  @HttpCode(HttpStatus.CREATED)
   async create(@Body() dto: CreateMovieDto) {
     return await this.movieService.create(dto);
   }
