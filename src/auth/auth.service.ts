@@ -2,6 +2,7 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RegisterRequest } from './dto/register.dto';
@@ -10,7 +11,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
 import type { TokenPayload } from './interfaces/jwt.interface';
 import { LoginRequest } from './dto/login.dto';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import { isDev } from 'src/utils/is-dev.util';
 
 @Injectable()
@@ -59,7 +60,6 @@ export class AuthService {
       },
     });
 
-    // return { user: newUser, tokens: this.generateTokens(newUser.id) };
     return this.auth(res, newUser);
   }
 
@@ -81,8 +81,39 @@ export class AuthService {
       throw new NotFoundException('Invalid email or password');
     }
 
-    // return { user, tokens: this.generateTokens(user.id) };
-    return this.auth(res, user);
+    return this.auth(res, {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+    });
+  }
+
+  async refresh(req: Request, res: Response) {
+    const refreshToken = req.cookies['refreshToken'] as string;
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token not found');
+    }
+
+    const payload: TokenPayload =
+      await this.jwtService.verifyAsync<TokenPayload>(refreshToken);
+
+    if (payload) {
+      const user = await this.prismaService.user.findUnique({
+        where: { id: payload.id },
+        select: { id: true, email: true, name: true },
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      return this.auth(res, user);
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async logout(res: Response) {
+    this.setCookie(res, 'refreshToken', new Date(0));
   }
 
   private auth(
