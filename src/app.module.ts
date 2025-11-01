@@ -7,9 +7,18 @@ import { ActorModule } from './actor/actor.module';
 import { MovieModule } from './movie/movie.module';
 import { ReviewModule } from './review/review.module';
 import { AuthModule } from './auth/auth.module';
+import { UserModule } from './user/user.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, ActorModule, MovieModule, ReviewModule, AuthModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    PrismaModule,
+    ActorModule,
+    MovieModule,
+    ReviewModule,
+    AuthModule,
+    UserModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
